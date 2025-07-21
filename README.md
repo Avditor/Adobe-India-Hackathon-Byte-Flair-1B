@@ -35,13 +35,13 @@ curl -fsSL https://ollama.com/install.sh | sh
 ollama pull gemma3:1b
 ```
 
-3️⃣ Start the Backend (FastAPI)
+4️⃣ Start the Backend (FastAPI)
 
 ```
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-4️⃣ Start the Frontend (Streamlit)
+5️⃣ Start the Frontend (Streamlit)
 
 ```
 streamlit run frontend.py
