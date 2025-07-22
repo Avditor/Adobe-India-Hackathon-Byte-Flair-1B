@@ -3,7 +3,7 @@ import requests
 import time
 
 
-st.set_page_config(page_title="Persona-Driven Document Intelligence", layout="wide")
+st.set_page_config(page_title="PDF Summarizer With NLP", layout="wide")
 
 st.markdown("""
     <style>
@@ -74,10 +74,10 @@ def format_section(title, content):
 
 uploaded_file = st.file_uploader("Upload a local PDF", type="pdf")
 
-if st.button("Analyze PDF"):
+if st.button("Summarize PDF"):
     if uploaded_file:
         with st.spinner("Processing..."):
-            status_placeholder.info("Uploading and analyzing the document...")
+            status_placeholder.info("Uploading and summarizing the document...")
 
             try:
                 response = requests.post(
@@ -91,10 +91,10 @@ if st.button("Analyze PDF"):
                     if "error" in data:
                         status_placeholder.error(f"{data['error']}")
                     else:
-                        summary = data.get("analysis", "No analysis generated.")
-                        status_placeholder.success("Analysis Ready!")
-                        st.text_area("📜 Analysis", summary, height=400)
-                        st.download_button("⬇️ Download Analysis", summary, "summary.md")
+                        summary = data.get("summary", "No summary generated.")
+                        status_placeholder.success("Summary Ready!")
+                        st.text_area("📜 Summary", summary, height=400)
+                        st.download_button("⬇️ Download Summary", summary, "summary.md")
                 else:
                     status_placeholder.error("Server error.")
             except Exception as e:
@@ -104,9 +104,4 @@ if st.button("Analyze PDF"):
 
 
 st.markdown("---")
-st.markdown("""
-###
-- Processing typically takes 3-5 minutes depending on pdf size
-- The analysis is structured into key sections for better readability
-- You can download the analysis as a markdown file
-""")
+
