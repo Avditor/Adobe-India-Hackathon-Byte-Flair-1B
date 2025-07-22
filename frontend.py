@@ -3,7 +3,7 @@ import requests
 import time
 
 
-st.set_page_config(page_title="PDF Summarizer With NLP", layout="wide")
+st.set_page_config(page_title="Persona-Driven Document Intelligence", layout="wide")
 
 st.markdown("""
     <style>
@@ -57,8 +57,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("PDF Summarizer With NLP")
-st.markdown("Extract and summarize research papers with AI-powered efficiency.")
+st.title("Persona-Driven Document Intelligence")
+st.markdown("Connecting What Matters - For The User Who Matters")
 
 status_placeholder = st.empty()
 
@@ -74,10 +74,10 @@ def format_section(title, content):
 
 uploaded_file = st.file_uploader("Upload a local PDF", type="pdf")
 
-if st.button("Summarize PDF"):
+if st.button("Analyze PDF"):
     if uploaded_file:
         with st.spinner("Processing..."):
-            status_placeholder.info("Uploading and summarizing the document...")
+            status_placeholder.info("Uploading and analyzing the document...")
 
             try:
                 response = requests.post(
@@ -91,10 +91,10 @@ if st.button("Summarize PDF"):
                     if "error" in data:
                         status_placeholder.error(f"{data['error']}")
                     else:
-                        summary = data.get("summary", "No summary generated.")
-                        status_placeholder.success("Summary Ready!")
-                        st.text_area("📜 Summary", summary, height=400)
-                        st.download_button("⬇️ Download Summary", summary, "summary.md")
+                        summary = data.get("analysis", "No analysis generated.")
+                        status_placeholder.success("Analysis Ready!")
+                        st.text_area("📜 Analysis", summary, height=400)
+                        st.download_button("⬇️ Download Analysis", summary, "summary.md")
                 else:
                     status_placeholder.error("Server error.")
             except Exception as e:
@@ -105,8 +105,8 @@ if st.button("Summarize PDF"):
 
 st.markdown("---")
 st.markdown("""
-### 📝 Notes:
+###
 - Processing typically takes 3-5 minutes depending on pdf size
-- The summary is structured into key sections for better readability
-- You can download the summary as a markdown file
+- The analysis is structured into key sections for better readability
+- You can download the analysis as a markdown file
 """)
