@@ -79,10 +79,12 @@ if st.button("Summarize PDF"):
         with st.spinner("Processing..."):
             status_placeholder.info("Uploading and summarizing the document...")
 
+
             try:
+                # Send the original filename in the multipart upload
                 response = requests.post(
                     "http://localhost:8000/summarize_local/",
-                    files={"file": uploaded_file.getvalue()},
+                    files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
                     timeout=3600
                 )
 
