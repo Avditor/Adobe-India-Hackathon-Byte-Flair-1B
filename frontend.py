@@ -72,12 +72,12 @@ def format_section(title, content):
     """
 
 
-uploaded_file = st.file_uploader("📄 Upload a local PDF", type="pdf")
+uploaded_file = st.file_uploader("Upload a local PDF", type="pdf")
 
 if st.button("Summarize PDF"):
     if uploaded_file:
-        with st.spinner("⏳ Processing..."):
-            status_placeholder.info("⏳ Uploading and summarizing the document...")
+        with st.spinner("Processing..."):
+            status_placeholder.info("Uploading and summarizing the document...")
 
             try:
                 response = requests.post(
@@ -89,18 +89,18 @@ if st.button("Summarize PDF"):
                 if response.status_code == 200:
                     data = response.json()
                     if "error" in data:
-                        status_placeholder.error(f"❌ {data['error']}")
+                        status_placeholder.error(f"{data['error']}")
                     else:
                         summary = data.get("summary", "No summary generated.")
-                        status_placeholder.success("✅ Summary Ready!")
+                        status_placeholder.success("Summary Ready!")
                         st.text_area("📜 Summary", summary, height=400)
                         st.download_button("⬇️ Download Summary", summary, "summary.md")
                 else:
-                    status_placeholder.error("❌ Server error.")
+                    status_placeholder.error("Server error.")
             except Exception as e:
-                status_placeholder.error(f"⚠️ Error: {str(e)}")
+                status_placeholder.error(f"Error: {str(e)}")
     else:
-        status_placeholder.warning("⚠️ Please upload a PDF file.")
+        status_placeholder.warning("Please upload a PDF file.")
 
 
 st.markdown("---")
