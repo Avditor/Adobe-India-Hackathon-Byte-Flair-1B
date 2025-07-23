@@ -25,10 +25,14 @@ pip install -r requirements.txt
 
 ▪️ Install Ollama (MacOS/Linux)
 
+
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
-If not supporting your OS, download Ollama from the website - https://ollama.com/download
+
+If not supporting your OS, install Ollama from the website - https://ollama.com/download
+
+
 
 ▪️ Download Gemma 3 Model
 
