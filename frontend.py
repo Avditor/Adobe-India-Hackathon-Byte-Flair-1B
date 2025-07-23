@@ -3,7 +3,7 @@ import requests
 import time
 
 
-st.set_page_config(page_title="PDF Summarizer With NLP", layout="wide")
+st.set_page_config(page_title="Persona-Driven Document Intelligence", layout="wide")
 
 st.markdown("""
     <style>
