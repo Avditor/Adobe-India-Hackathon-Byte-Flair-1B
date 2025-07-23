@@ -44,23 +44,6 @@ async def summarize_local(file: UploadFile = File(...)):
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        # Save to Collections folder
-
-        collections_dir = os.path.join(os.path.dirname(__file__), "Collections")
-        os.makedirs(collections_dir, exist_ok=True)
-
-        # Ensure the filename has a .pdf extension and is unique
-        import uuid
-        base_filename = file.filename
-        if not base_filename.lower().endswith(".pdf"):
-            base_filename += ".pdf"
-        # Add a unique suffix to avoid overwriting
-        collections_path = os.path.join(collections_dir, base_filename)
-        with open(collections_path, "wb") as f:
-            f.write(file_bytes)
-
-        logger.info(f"Saved uploaded PDF to: {tmp_path} and Collections: {collections_path}")
-
         # Extract and summarize
         text = extract_text_from_pdf(tmp_path)
         if not text:
