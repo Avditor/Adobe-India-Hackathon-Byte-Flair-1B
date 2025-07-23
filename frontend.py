@@ -1,7 +1,8 @@
 import streamlit as st
 import requests
 import time
-
+import os
+import streamlit as st
 
 st.set_page_config(page_title="Persona-Driven Document Intelligence", layout="wide")
 
@@ -72,7 +73,25 @@ def format_section(title, content):
     """
 
 
-uploaded_file = st.file_uploader("Upload a local PDF", type="pdf")
+uploaded_file = st.file_uploader("Upload a local PDF", type="pdf", key="pdf_uploader")
+
+if uploaded_file is not None:
+    collections_dir = os.path.join(os.path.dirname(__file__), "Collections")
+    os.makedirs(collections_dir, exist_ok=True)
+
+    base_filename = uploaded_file.name
+    if not base_filename.lower().endswith(".pdf"):
+        base_filename += ".pdf"
+
+    collections_path = os.path.join(collections_dir, base_filename)
+
+    if not os.path.exists(collections_path):
+        with open(collections_path, "wb") as f:
+            f.write(uploaded_file.getvalue())
+        st.success(f"✅ File saved to Collections as: `{base_filename}`")
+    else:
+        st.warning(f"⚠️ File `{base_filename}` already exists in Collections. Skipping save.")
+
 
 if st.button("Summarize PDF"):
     if uploaded_file:
