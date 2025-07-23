@@ -73,7 +73,13 @@ def format_section(title, content):
     """
 
 
+
+
 uploaded_file = st.file_uploader("Upload a local PDF", type="pdf", key="pdf_uploader")
+
+
+# Input JSON uploader
+input_json_file = st.file_uploader("Upload input.json (challenge/task description)", type=["json"], key="input_json_uploader")
 
 if uploaded_file is not None:
     collections_dir = os.path.join(os.path.dirname(__file__), "Collections","PDFs")
@@ -94,16 +100,19 @@ if uploaded_file is not None:
 
 
 if st.button("Summarize PDF"):
-    if uploaded_file:
+    if uploaded_file and input_json_file:
         with st.spinner("Processing..."):
             status_placeholder.info("Uploading and summarizing the document...")
 
-
             try:
-                # Send the original filename in the multipart upload
+                # Send the PDF and input.json as separate file fields
+                files = {
+                    "file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf"),
+                    "input_json": (input_json_file.name, input_json_file.getvalue(), "application/json")
+                }
                 response = requests.post(
                     "http://localhost:8000/summarize_local/",
-                    files={"file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf")},
+                    files=files,
                     timeout=3600
                 )
 
@@ -121,7 +130,7 @@ if st.button("Summarize PDF"):
             except Exception as e:
                 status_placeholder.error(f"Error: {str(e)}")
     else:
-        status_placeholder.warning("Please upload a PDF file.")
+        status_placeholder.warning("Please upload both a PDF file and an input.json file.")
 
 
 st.markdown("---")

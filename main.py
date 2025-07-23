@@ -196,25 +196,14 @@ async def summarize_text_parallel(text):
     final_messages = [
         {
             "role": "system",
-            "content": "You are a technical documentation writer. Focus ONLY on technical details, implementations, and results. DO NOT mention papers, citations, or authors."
+            "content": "You are a documentation analyzer. Focus ONLY on analyzing details and suitable personas"
         },
         {
             "role": "user",
-            "content": f"""Create a comprehensive technical document focusing ONLY on the implementation and results.
-            Structure the content into these sections:
-
-            1. System Architecture
-            2. Technical Implementation
-            3. Infrastructure & Setup
-            4. Performance Analysis
-            5. Optimization Techniques
+            "content": f"""Create a comprehensive technical document focusing ONLY on the implementation and results. Create a brief summary in 150 words and in the first line mention most suitable persona, don't say okay here's what you asked just give the analysis, don't repeat the prompt
 
             CRITICAL INSTRUCTIONS:
-            - Focus ONLY on technical details and implementations
-            - Include specific numbers, metrics, and measurements
-            - Explain HOW things work
-            - DO NOT include any citations or references
-            - DO NOT mention other research or related work
+            - Focus ONLY on most suitable details
             - Some sections may contain error messages - please ignore these and work with available information
 
             Content to organize:
