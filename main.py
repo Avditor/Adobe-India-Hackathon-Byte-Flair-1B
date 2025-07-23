@@ -10,6 +10,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import ollama
+from fastapi.responses import JSONResponse
+from typing import Optional, List
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -28,16 +30,17 @@ def health_check():
     return {"status": "ok", "message": "FastAPI backend is running!"}
 
 
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Form
 from tempfile import NamedTemporaryFile
 
 @app.post("/summarize_local/")
-async def summarize_local(file: UploadFile = File(...)):
+async def summarize_local(file: UploadFile = File(...), input_json: Optional[UploadFile] = File(None)):
     try:
-        logger.info(f"Received file: {file.filename}")
+        logger.info(f"Received PDF file: {file.filename}")
+        if input_json:
+            logger.info(f"Received JSON file: {input_json.filename}")
 
-
-        # Save uploaded file to both a temp file and the Collections folder
+        # Save uploaded PDF file bytes
         file_bytes = await file.read()
 
         # Save to temp file for processing
@@ -45,20 +48,29 @@ async def summarize_local(file: UploadFile = File(...)):
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        # Save uploaded PDF to Collections/PDFs with unique filename
+        # Save PDF to Collections/PDFs/
         import uuid
-        collections_dir = os.path.join(os.path.dirname(__file__), "Collections", "PDFs")
-        os.makedirs(collections_dir, exist_ok=True)
-        base_filename = file.filename
-        if not base_filename or base_filename.strip() == "":
-            base_filename = "uploaded.pdf"
+        collections_dir_pdf = os.path.join(os.path.dirname(__file__), "Collections", "PDFs")
+        os.makedirs(collections_dir_pdf, exist_ok=True)
+        base_filename = file.filename or "uploaded.pdf"
         if not base_filename.lower().endswith(".pdf"):
             base_filename += ".pdf"
         unique_filename = f"{os.path.splitext(base_filename)[0]}_{uuid.uuid4().hex[:8]}.pdf"
-        collections_path = os.path.join(collections_dir, unique_filename)
-        with open(collections_path, "wb") as f:
+        pdf_save_path = os.path.join(collections_dir_pdf, unique_filename)
+        with open(pdf_save_path, "wb") as f:
             f.write(file_bytes)
-        logger.info(f"Saved uploaded PDF to: {collections_path}")
+        logger.info(f"Saved uploaded PDF to: {pdf_save_path}")
+
+        # Save input JSON to Collections/
+        if input_json:
+            json_bytes = await input_json.read()
+            collections_dir_json = os.path.join(os.path.dirname(__file__), "Collections")
+            os.makedirs(collections_dir_json, exist_ok=True)
+            json_filename = input_json.filename or "input.json"
+            json_save_path = os.path.join(collections_dir_json, json_filename)
+            with open(json_save_path, "wb") as f:
+                f.write(json_bytes)
+            logger.info(f"Saved input JSON to: {json_save_path}")
 
         # Extract and summarize
         text = extract_text_from_pdf(tmp_path)
@@ -69,8 +81,9 @@ async def summarize_local(file: UploadFile = File(...)):
         return {"summary": summary}
 
     except Exception as e:
-        logger.error(f"Error processing uploaded PDF: {str(e)}")
-        return {"error": "Failed to process uploaded PDF"}
+        logger.error(f"Error processing uploaded files: {str(e)}")
+        return {"error": "Failed to process uploaded files"}
+    
 
 def extract_text_from_pdf(pdf_path):
     """Extracts text from a PDF file using PyMuPDF (faster than Unstructured PDFLoader)."""
