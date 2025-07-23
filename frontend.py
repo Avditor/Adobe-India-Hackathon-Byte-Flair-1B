@@ -76,7 +76,7 @@ def format_section(title, content):
 uploaded_file = st.file_uploader("Upload a local PDF", type="pdf", key="pdf_uploader")
 
 if uploaded_file is not None:
-    collections_dir = os.path.join(os.path.dirname(__file__), "Collections")
+    collections_dir = os.path.join(os.path.dirname(__file__), "Collections","PDFs")
     os.makedirs(collections_dir, exist_ok=True)
 
     base_filename = uploaded_file.name
