@@ -28,6 +28,7 @@ pip install -r requirements.txt
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ```
+If not supporting your OS, download Ollama from the website - https://ollama.com/download
 
 ▪️ Download Gemma 3 Model
 
