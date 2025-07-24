@@ -12,6 +12,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import ollama
 from fastapi.responses import JSONResponse
 from typing import Optional, List
+import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -57,7 +58,21 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
         text = extract_text_from_pdf(tmp_path)
         # Summarize the extracted text, passing input_context
         summary = await summarize_text_parallel(text, input_context)
+        
+        # Automatically trigger generate_output after summary is complete
+        # Call /generate_output/ endpoint after summary is complete
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.post("http://localhost:8000/generate_output/")
+                if response.status_code == 200:
+                    logger.info("✅ output.json successfully updated after summarization.")
+                else:
+                    logger.warning(f"⚠️ Failed to update output.json: {response.status_code} - {response.text}")
+        except Exception as e:
+            logger.error(f"❌ Error while calling /generate_output/: {str(e)}")
         return {"summary": summary}
+    
     except Exception as e:
         logger.error(f"❌ Error in summarize_local endpoint: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
@@ -214,7 +229,7 @@ async def summarize_text_parallel(text, input_context=None):
     - **Task:** {task}
     - **Challenge Description:** {challenge}
 
-    Use ONLY relevant document content to solve this challenge. STOP starting with okay here's the summary, analysis or anything similar, JUST focus on outputting.
+    Use ONLY relevant document content to solve this challenge. STOP starting with okay here's the summary, or anything similar, JUST focus on outputting.
     Provide a clear, actionable summary in 150 words.
     DO NOT repeat these instructions or mention you're an AI.
     Ignore chunks with errors.
@@ -346,3 +361,90 @@ if __name__ == "__main__":
 
     logger.info("Starting FastAPI server on http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
+
+@app.post("/generate_output/")
+async def generate_structured_output():
+    try:
+        # Load input.json
+        input_path = os.path.join(os.path.dirname(__file__), "Collections", "input.json")
+        with open(input_path, "r", encoding="utf-8") as f:
+            input_data = json.load(f)
+
+        documents = input_data.get("documents", [])
+        persona = input_data.get("persona", {}).get("role", "")
+        task = input_data.get("job_to_be_done", {}).get("task", "")
+        timestamp = datetime.datetime.now().isoformat()
+
+        extracted_sections = []
+        subsection_analysis = []
+
+        for doc in documents:
+            filename = doc.get("filename")
+            title = doc.get("title")
+            pdf_path = os.path.join(os.path.dirname(__file__), "Collections", "PDFs", filename)
+
+            # Extract PDF text
+            if not os.path.exists(pdf_path):
+                logger.warning(f"❌ File not found: {filename}")
+                continue
+
+            text = extract_text_from_pdf(pdf_path)
+
+            # Prompt Ollama for structured extraction
+            messages = [
+                {"role": "system", "content": f"You are helping a {persona} who needs to: {task}. Extract the most important section titles with importance ranking (High/Medium/Low) and page numbers."},
+                {"role": "user", "content": f"Document: {title}\n\n{text}\n\nReturn 5 important sections with section_title, importance_rank, page_number, and a short refined_text for each. Format each section like:\nSection Title: ...\nImportance: ...\nPage: ...\nText: ...\n"}
+            ]
+
+            payload = {
+                "model": "gemma3:1b",
+                "messages": messages,
+                "stream": False
+            }
+
+            async with httpx.AsyncClient(timeout=600) as client:
+                response = await client.post("http://localhost:11434/api/chat", json=payload)
+                response.raise_for_status()
+                result = response.json()
+
+            content = result['message']['content']
+
+            # Extract structured entries using regex
+            import re
+            entries = re.findall(r"Section Title: (.*?)\nImportance: (.*?)\nPage: (.*?)\nText: (.*?)\n", content, re.DOTALL)
+
+            for entry in entries:
+                section_title, importance, page, refined = entry
+                extracted_sections.append({
+                    "document": filename,
+                    "section_title": section_title.strip(),
+                    "importance_rank": importance.strip(),
+                    "page_number": page.strip()
+                })
+                subsection_analysis.append({
+                    "document": filename,
+                    "refined_text": refined.strip(),
+                    "page_number": page.strip()
+                })
+
+        # Build final output.json object
+        output_data = {
+            "metadata": {
+                "input_documents": [d["filename"] for d in documents],
+                "persona": persona,
+                "job_to_be_done": task,
+                "processing_timestamp": timestamp
+            },
+            "extracted_sections": extracted_sections[:5],
+            "subsection_analysis": subsection_analysis[:5]
+        }
+
+        output_path = os.path.join(os.path.dirname(__file__), "Collections", "output.json")
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(output_data, f, indent=4)
+
+        return {"status": "success", "message": "output.json updated!"}
+
+    except Exception as e:
+        logger.error(f"❌ Error generating structured output: {str(e)}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
