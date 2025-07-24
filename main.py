@@ -48,19 +48,6 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        # Save PDF to Collections/PDFs/
-        import uuid
-        collections_dir_pdf = os.path.join(os.path.dirname(__file__), "Collections", "PDFs")
-        os.makedirs(collections_dir_pdf, exist_ok=True)
-        base_filename = file.filename or "uploaded.pdf"
-        if not base_filename.lower().endswith(".pdf"):
-            base_filename += ".pdf"
-        unique_filename = f"{os.path.splitext(base_filename)[0]}_{uuid.uuid4().hex[:8]}.pdf"
-        pdf_save_path = os.path.join(collections_dir_pdf, unique_filename)
-        with open(pdf_save_path, "wb") as f:
-            f.write(file_bytes)
-        logger.info(f"Saved uploaded PDF to: {pdf_save_path}")
-
         # Save input JSON to Collections/
         if input_json:
             json_bytes = await input_json.read()
