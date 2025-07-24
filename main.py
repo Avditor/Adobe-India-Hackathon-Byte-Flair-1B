@@ -32,13 +32,13 @@ def health_check():
 
 from fastapi import File, UploadFile, Form
 from tempfile import NamedTemporaryFile
-
 @app.post("/summarize_local/")
 async def summarize_local(file: UploadFile = File(...), input_json: Optional[UploadFile] = File(None)):
     try:
         logger.info(f"Received PDF file: {file.filename}")
         if input_json:
             logger.info(f"Received JSON file: {input_json.filename}")
+            await save_uploaded_json(input_json)
 
         # Save uploaded PDF file bytes
         file_bytes = await file.read()
@@ -48,40 +48,41 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
             tmp.write(file_bytes)
             tmp_path = tmp.name
 
-        # Save input JSON to Collections/
-        input_context = {}
-        if input_json:
-            json_bytes = await input_json.read()
-            collections_dir_json = os.path.join(os.path.dirname(__file__), "Collections")
-            os.makedirs(collections_dir_json, exist_ok=True)
-            json_save_path = os.path.join(collections_dir_json, "input.json")
-            with open(json_save_path, "wb") as f:
-                f.write(json_bytes)
-            logger.info(f"Saved input JSON to: {json_save_path}")
-            input_context = json.loads(json_bytes)
-
-        # Extract and summarize
+        # Extract text from the saved PDF
         text = extract_text_from_pdf(tmp_path)
-        if not text:
-            return {"error": "No text extracted from PDF"}
 
-        summary = await summarize_text_parallel(text, input_context=input_context)
+        # Summarize the extracted text
+        summary = await summarize_text_parallel(text)
+
+        # Save summary to Collections/input.json
         return {"summary": summary}
 
     except Exception as e:
-        logger.error(f"Error processing uploaded files: {str(e)}")
-        return {"error": "Failed to process uploaded files"}
-    
+        logger.error(f"❌ Error in summarize_local endpoint: {str(e)}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
+async def save_uploaded_json(input_json):
+    if input_json:
+        json_bytes = await input_json.read()
+
+        # Always use Collections/input.json as save path
+        collections_dir_json = os.path.join(os.path.dirname(__file__), "Collections")
+        os.makedirs(collections_dir_json, exist_ok=True)
+
+        json_save_path = os.path.join(collections_dir_json, "input.json")  # <-- hardcoded filename
+
+        with open(json_save_path, "wb") as f:
+            f.write(json_bytes)
+
+        logging.info(f"✅ JSON saved to: {json_save_path}")
 def extract_text_from_pdf(pdf_path):
-    """Extracts text from a PDF file using PyMuPDF (faster than Unstructured PDFLoader)."""
-    try:
-        doc = fitz.open(pdf_path)
-        text = "\n".join([page.get_text("text") for page in doc])
-        return text
-    except Exception as e:
-        logger.error(f"Error extracting text: {e}")
-        return ""
+    text = ""
+    with fitz.open(pdf_path) as doc:
+        for page in doc:
+            text += page.get_text()
+    return text
+
+
 
 async def summarize_chunk_with_retry(chunk, chunk_id, total_chunks, max_retries=2):
     """Retry mechanism wrapper for summarize_chunk_wrapper."""
