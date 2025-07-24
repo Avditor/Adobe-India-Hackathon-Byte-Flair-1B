@@ -49,22 +49,23 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
             tmp_path = tmp.name
 
         # Save input JSON to Collections/
+        input_context = {}
         if input_json:
             json_bytes = await input_json.read()
             collections_dir_json = os.path.join(os.path.dirname(__file__), "Collections")
             os.makedirs(collections_dir_json, exist_ok=True)
-            json_filename = input_json.filename or "input.json"
-            json_save_path = os.path.join(collections_dir_json, json_filename)
+            json_save_path = os.path.join(collections_dir_json, "input.json")
             with open(json_save_path, "wb") as f:
                 f.write(json_bytes)
             logger.info(f"Saved input JSON to: {json_save_path}")
+            input_context = json.loads(json_bytes)
 
         # Extract and summarize
         text = extract_text_from_pdf(tmp_path)
         if not text:
             return {"error": "No text extracted from PDF"}
 
-        summary = await summarize_text_parallel(text)
+        summary = await summarize_text_parallel(text, input_context=input_context)
         return {"summary": summary}
 
     except Exception as e:
@@ -127,7 +128,7 @@ async def summarize_chunk_with_retry(chunk, chunk_id, total_chunks, max_retries=
     return f"Error: Unexpected end of retry loop for chunk {chunk_id}"
 
 
-async def summarize_text_parallel(text):
+async def summarize_text_parallel(text, input_context=None):
     """Process text in chunks optimized for Gemma 3's 128K context window with full parallelism and retry logic."""
     token_estimate = len(text) // 4
     logger.info(f"Token Estimate: {token_estimate}")
@@ -193,24 +194,35 @@ async def summarize_text_parallel(text):
     logger.info("Generating final summary...")
 
     # Create final summary with system message
+    persona = input_context.get("persona", {}).get("role", "a general user")
+    task = input_context.get("job_to_be_done", {}).get("task", "analyze the document for insights")
+    challenge = input_context.get("challenge_info", {}).get("description", "")
+
     final_messages = [
         {
             "role": "system",
-            "content": "You are a documentation analyzer. Focus ONLY on analyzing details and suitable personas"
+            "content": f"You are a document intelligence assistant helping {persona}s complete tasks."
         },
         {
             "role": "user",
-            "content": f"""Create a comprehensive technical document focusing ONLY on the implementation and results. Create a brief summary in 150 words and in the first line mention most suitable persona, don't say okay here's what you asked just give the analysis, don't repeat the prompt
+            "content": f"""
+    Generate a technical analysis and summary based on the user's context:
 
-            CRITICAL INSTRUCTIONS:
-            - Focus ONLY on most suitable details
-            - Some sections may contain error messages - please ignore these and work with available information
+    - 📌 **Persona:** {persona}
+    - 🎯 **Task:** {task}
+    - 🧩 **Challenge Description:** {challenge}
 
-            Content to organize:
-            {combined_chunk_summaries}
-            """
+    Use ONLY relevant document content to solve this challenge.
+    Provide a clear, actionable summary in 150 words.
+    DO NOT repeat these instructions or mention you're an AI.
+    Ignore chunks with errors.
+
+    Here’s the content to analyze:
+    {combined_chunk_summaries}
+    """
         }
     ]
+
 
     # Use async http client for the final summary with retry logic
     max_retries = 2
