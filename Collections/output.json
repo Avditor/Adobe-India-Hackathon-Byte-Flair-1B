@@ -1,0 +1,69 @@
+{
+    "metadata": {
+        "input_documents": [
+            ""
+        ],
+        "persona": "",
+        "job_to_be_done": "",
+        "processing_timestamp": "2"
+    },
+    "extracted_sections": [
+        {
+            "document": "",
+            "section_title": "",
+            "importance_rank": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "section_title": "",
+            "importance_rank": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "section_title": "",
+            "importance_rank": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "section_title": "",
+            "importance_rank": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "section_title": "",
+            "importance_rank": "",
+            "page_number": ""
+        }
+    ],
+    "subsection_analysis": [
+        {
+            "document": "",
+            "refined_text": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "refined_text": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "refined_text": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "refined_text": "",
+            "page_number": ""
+        },
+        {
+            "document": "",
+            "refined_text": "",
+            "page_number": ""
+        }
+    ]
+}
