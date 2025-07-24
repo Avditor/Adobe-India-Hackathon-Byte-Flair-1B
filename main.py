@@ -32,31 +32,32 @@ def health_check():
 
 from fastapi import File, UploadFile, Form
 from tempfile import NamedTemporaryFile
+
 @app.post("/summarize_local/")
 async def summarize_local(file: UploadFile = File(...), input_json: Optional[UploadFile] = File(None)):
     try:
         logger.info(f"Received PDF file: {file.filename}")
+        input_context = {}
         if input_json:
             logger.info(f"Received JSON file: {input_json.filename}")
             await save_uploaded_json(input_json)
-
+            try:
+                json_bytes = await input_json.read()
+                input_context = json.loads(json_bytes.decode("utf-8"))
+            except Exception as e:
+                logger.warning(f"Could not parse input_json: {str(e)}")
+                input_context = {}
         # Save uploaded PDF file bytes
         file_bytes = await file.read()
-
         # Save to temp file for processing
         with NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_bytes)
             tmp_path = tmp.name
-
         # Extract text from the saved PDF
         text = extract_text_from_pdf(tmp_path)
-
-        # Summarize the extracted text
-        summary = await summarize_text_parallel(text)
-
-        # Save summary to Collections/input.json
+        # Summarize the extracted text, passing input_context
+        summary = await summarize_text_parallel(text, input_context)
         return {"summary": summary}
-
     except Exception as e:
         logger.error(f"❌ Error in summarize_local endpoint: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)

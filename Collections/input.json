@@ -1,23 +1,75 @@
 {
-  "dependencies": {
-    "@tailwindcss/cli": "^4.0.6",
-    "axios": "^1.7.4",
-    "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^4.21.2",
-    "mongodb": "^6.8.0",
-    "mongoose": "^8.13.2",
-    "multer": "^1.4.5-lts.1",
-    "mysql": "^2.18.1",
-    "node": "^18.20.8",
-    "node.js": "^0.0.1-security",
-    "nodemon": "^3.1.4",
-    "save": "^2.9.0"
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.39",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2"
-  }
+    "challenge_info": {
+        "challenge_id": "round_1b_003",
+        "test_case_name": "create_manageable_forms",
+        "description": "Creating manageable forms"
+    },
+    "documents": [
+        {
+            "filename": "Learn Acrobat - Create and Convert_1.pdf",
+            "title": "Learn Acrobat - Create and Convert_1"
+        },
+        {
+            "filename": "Learn Acrobat - Create and Convert_2.pdf",
+            "title": "Learn Acrobat - Create and Convert_2"
+        },
+        {
+            "filename": "Learn Acrobat - Edit_1.pdf",
+            "title": "Learn Acrobat - Edit_1"
+        },
+        {
+            "filename": "Learn Acrobat - Edit_2.pdf",
+            "title": "Learn Acrobat - Edit_2"
+        },
+        {
+            "filename": "Learn Acrobat - Export_1.pdf",
+            "title": "Learn Acrobat - Export_1"
+        },
+        {
+            "filename": "Learn Acrobat - Export_2.pdf",
+            "title": "Learn Acrobat - Export_2"
+        },
+        {
+            "filename": "Learn Acrobat - Fill and Sign.pdf",
+            "title": "Learn Acrobat - Fill and Sign"
+        },
+        {
+            "filename": "Learn Acrobat - Generative AI_1.pdf",
+            "title": "Learn Acrobat - Generative AI_1"
+        },
+        {
+            "filename": "Learn Acrobat - Generative AI_2.pdf",
+            "title": "Learn Acrobat - Generative AI_2"
+        },
+        {
+            "filename": "Learn Acrobat - Request e-signatures_1.pdf",
+            "title": "Learn Acrobat - Request e-signatures_1"
+        },
+        {
+            "filename": "Learn Acrobat - Request e-signatures_2.pdf",
+            "title": "Learn Acrobat - Request e-signatures_2"
+        },
+        {
+            "filename": "Learn Acrobat - Share_1.pdf",
+            "title": "Learn Acrobat - Share_1"
+        },
+        {
+            "filename": "Learn Acrobat - Share_2.pdf",
+            "title": "Learn Acrobat - Share_2"
+        },
+        {
+            "filename": "Test Your Acrobat Exporting Skills.pdf",
+            "title": "Test Your Acrobat Exporting Skills"
+        },
+        {
+            "filename": "The Ultimate PDF Sharing Checklist.pdf",
+            "title": "The Ultimate PDF Sharing Checklist"
+        }
+    ],
+    "persona": {
+        "role": "HR professional"
+    },
+    "job_to_be_done": {
+        "task": "Create and manage fillable forms for onboarding and compliance."
+    }
 }
