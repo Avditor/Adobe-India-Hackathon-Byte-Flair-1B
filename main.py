@@ -210,11 +210,11 @@ async def summarize_text_parallel(text, input_context=None):
             "content": f"""
     Generate a technical analysis and summary based on the user's context:
 
-    - 📌 **Persona:** {persona}
-    - 🎯 **Task:** {task}
-    - 🧩 **Challenge Description:** {challenge}
+    - **Persona:** {persona}
+    - **Task:** {task}
+    - **Challenge Description:** {challenge}
 
-    Use ONLY relevant document content to solve this challenge.
+    Use ONLY relevant document content to solve this challenge. STOP starting with okay here's the summary, analysis or anything similar, JUST focus on outputting.
     Provide a clear, actionable summary in 150 words.
     DO NOT repeat these instructions or mention you're an AI.
     Ignore chunks with errors.
@@ -339,42 +339,6 @@ async def summarize_chunk_wrapper(chunk, chunk_id, total_chunks):
         logger.error(f"Error processing chunk {chunk_id}: {str(e)}")
         logger.error(f"Traceback: {error_details}")
         return f"Error processing chunk {chunk_id}: {str(e)}"
-
-
-# Keep this function as a reference or remove it as it's been replaced by summarize_chunk_wrapper
-def summarize_chunk(chunk, chunk_id):
-    """Summarizes a single chunk using Ollama (Gemma 3 LLM)."""
-    logger.info(f"\n{'=' * 40} Processing Chunk {chunk_id} {'=' * 40}")
-    logger.info(f"Input chunk length: {len(chunk)} characters")
-
-    prompt = f"""
-    You are a technical content extractor. Extract and explain ONLY the technical details from this section.
-
-    Focus on:
-    1. **System Architecture** – Design, component interactions, algorithms, configurations.
-    2. **Implementation** – Code/pseudocode, data structures, formulas (with explanations), parameter values.
-    3. **Experiments** – Hardware (GPUs, RAM), software versions, dataset size, training hyperparameters.
-    4. **Results** – Performance metrics (accuracy, latency, memory usage), comparisons.
-
-    **Rules:**
-    - NO citations, references, or related work.
-    - NO mention of authors or external papers.
-    - ONLY technical details, numbers, and implementations.
-
-    Text to analyze:
-    {chunk}
-    """
-    try:
-        logger.info(f"Sending chunk {chunk_id} to Ollama...")
-        response = ollama.chat(model="gemma3:1b", messages=[{"role": "user", "content": prompt}])
-        summary = response['message']['content']
-        logger.info(f"Successfully processed chunk {chunk_id}")
-        logger.info(f"Summary length: {len(summary)} characters")
-        print(summary)
-        return summary
-    except Exception as e:
-        logger.error(f"Error summarizing chunk {chunk_id}: {e}")
-        return f"Error summarizing chunk {chunk_id}"
 
 
 if __name__ == "__main__":
