@@ -65,6 +65,11 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
             import httpx
             async with httpx.AsyncClient() as client:
                 response = await client.post("http://localhost:8000/generate_output/")
+                try:
+                    response.raise_for_status()
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"❌ /generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
+                    raise
                 if response.status_code == 200:
                     logger.info("✅ output.json successfully updated after summarization.")
                 else:
@@ -362,6 +367,7 @@ if __name__ == "__main__":
     logger.info("Starting FastAPI server on http://localhost:8000")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
 
+
 @app.post("/generate_output/")
 async def generate_structured_output():
     try:
@@ -370,21 +376,22 @@ async def generate_structured_output():
         with open(input_path, "r", encoding="utf-8") as f:
             input_data = json.load(f)
 
+        # Fix for output.json schema: input_document, extracted_section, subsection_analysis
         documents = input_data.get("documents", [])
-        persona = input_data.get("persona", {}).get("role", "")
-        task = input_data.get("job_to_be_done", {}).get("task", "")
+        persona = input_data.get("persona", "")
+        job_to_be_done = input_data.get("job_to_be_done", "")
         timestamp = datetime.datetime.now().isoformat()
 
-        extracted_sections = []
+        extracted_section = []
         subsection_analysis = []
 
         for doc in documents:
-            filename = doc.get("filename")
-            title = doc.get("title")
+            filename = doc.get("filename", "") if isinstance(doc, dict) else ""
+            title = doc.get("title", "") if isinstance(doc, dict) else ""
             pdf_path = os.path.join(os.path.dirname(__file__), "Collections", "PDFs", filename)
 
             # Extract PDF text
-            if not os.path.exists(pdf_path):
+            if not filename or not os.path.exists(pdf_path):
                 logger.warning(f"❌ File not found: {filename}")
                 continue
 
@@ -392,8 +399,8 @@ async def generate_structured_output():
 
             # Prompt Ollama for structured extraction
             messages = [
-                {"role": "system", "content": f"You are helping a {persona} who needs to: {task}. Extract the most important section titles with importance ranking (High/Medium/Low) and page numbers."},
-                {"role": "user", "content": f"Document: {title}\n\n{text}\n\nReturn 5 important sections with section_title, importance_rank, page_number, and a short refined_text for each. Format each section like:\nSection Title: ...\nImportance: ...\nPage: ...\nText: ...\n"}
+                {"role": "system", "content": f"You are helping a persona who needs to: {job_to_be_done}. Extract the most important section titles with importance ranking (High/Medium/Low) and page numbers."},
+                {"role": "user", "content": f"Document: {title}\n\n{text}\n\nReturn 1 important section with section_title, importance_rank, page_number, and a short refined_text. Format:\nSection Title: ...\nImportance: ...\nPage: ...\nText: ...\n"}
             ]
 
             payload = {
@@ -409,13 +416,12 @@ async def generate_structured_output():
 
             content = result['message']['content']
 
-            # Extract structured entries using regex
+            # Extract structured entry using regex
             import re
-            entries = re.findall(r"Section Title: (.*?)\nImportance: (.*?)\nPage: (.*?)\nText: (.*?)\n", content, re.DOTALL)
-
-            for entry in entries:
-                section_title, importance, page, refined = entry
-                extracted_sections.append({
+            entry = re.search(r"Section Title: (.*?)\nImportance: (.*?)\nPage: (.*?)\nText: (.*?)\n", content, re.DOTALL)
+            if entry:
+                section_title, importance, page, refined = entry.groups()
+                extracted_section.append({
                     "document": filename,
                     "section_title": section_title.strip(),
                     "importance_rank": importance.strip(),
@@ -426,18 +432,41 @@ async def generate_structured_output():
                     "refined_text": refined.strip(),
                     "page_number": page.strip()
                 })
+            else:
+                # If no match, append empty structure
+                extracted_section.append({
+                    "document": filename,
+                    "section_title": "",
+                    "importance_rank": "",
+                    "page_number": ""
+                })
+                subsection_analysis.append({
+                    "document": filename,
+                    "refined_text": "",
+                    "page_number": ""
+                })
 
         # Build final output.json object
         output_data = {
             "metadata": {
-                "input_documents": [d["filename"] for d in documents],
+                "input_document": [d["filename"] if isinstance(d, dict) else "" for d in documents],
                 "persona": persona,
-                "job_to_be_done": task,
+                "job_to_be_done": job_to_be_done,
                 "processing_timestamp": timestamp
             },
-            "extracted_sections": extracted_sections[:5],
-            "subsection_analysis": subsection_analysis[:5]
+            "extracted_section": extracted_section,
+            "subsection_analysis": subsection_analysis
         }
+
+        
+        # Optional: Read final summary to include in output.json
+        summary_path = os.path.join(os.path.dirname(__file__), "Collections", "final_summary.txt")
+        final_summary = ""
+        if os.path.exists(summary_path):
+            with open(summary_path, "r", encoding="utf-8") as fs:
+                final_summary = fs.read()
+
+        output_data["metadata"]["final_summary"] = final_summary
 
         output_path = os.path.join(os.path.dirname(__file__), "Collections", "output.json")
         with open(output_path, "w", encoding="utf-8") as f:
