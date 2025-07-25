@@ -68,18 +68,18 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
                 try:
                     response.raise_for_status()
                 except httpx.HTTPStatusError as e:
-                    logger.error(f"❌ /generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
+                    logger.error(f"/generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
                     raise
                 if response.status_code == 200:
-                    logger.info("✅ output.json successfully updated after summarization.")
+                    logger.info("output.json successfully updated after summarization.")
                 else:
-                    logger.warning(f"⚠️ Failed to update output.json: {response.status_code} - {response.text}")
+                    logger.warning(f"Failed to update output.json: {response.status_code} - {response.text}")
         except Exception as e:
-            logger.error(f"❌ Error while calling /generate_output/: {str(e)}")
+            logger.error(f"Error while calling /generate_output/: {str(e)}")
         return {"summary": summary}
     
     except Exception as e:
-        logger.error(f"❌ Error in summarize_local endpoint: {str(e)}")
+        logger.error(f"Error in summarize_local endpoint: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 async def save_uploaded_json(input_json):
@@ -95,7 +95,7 @@ async def save_uploaded_json(input_json):
         with open(json_save_path, "wb") as f:
             f.write(json_bytes)
 
-        logging.info(f"✅ JSON saved to: {json_save_path}")
+        logging.info(f"JSON saved to: {json_save_path}")
 def extract_text_from_pdf(pdf_path):
     text = ""
     with fitz.open(pdf_path) as doc:
@@ -392,7 +392,7 @@ async def generate_structured_output():
 
             # Extract PDF text
             if not filename or not os.path.exists(pdf_path):
-                logger.warning(f"❌ File not found: {filename}")
+                logger.warning(f"File not found: {filename}")
                 continue
 
             text = extract_text_from_pdf(pdf_path)
@@ -475,5 +475,5 @@ async def generate_structured_output():
         return {"status": "success", "message": "output.json updated!"}
 
     except Exception as e:
-        logger.error(f"❌ Error generating structured output: {str(e)}")
+        logger.error(f"Error generating structured output: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
