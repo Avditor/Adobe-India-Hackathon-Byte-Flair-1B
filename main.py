@@ -79,7 +79,7 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
         #     logger.error(f"Error while calling /generate_output/: {str(e)}")
         response = await generate_structured_output()
         logger.info(response)
-        return {"summary": json.dumps(response.json)}
+        return {"summary": json.dumps(response.get("json",{}))}
     
     except Exception as e:
         logger.error(f"Error in summarize_local endpoint: {str(e)}")

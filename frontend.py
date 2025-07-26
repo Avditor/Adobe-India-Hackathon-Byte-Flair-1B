@@ -123,9 +123,8 @@ if st.button("Summarize PDF"):
                     else:
                         summary = data.get("summary", "No summary generated.")
                         status_placeholder.success("Summary Ready!")
-                        # st.text_area("📜 Summary", summary, height=400)
-                        # st.download_button("⬇️ Download Summary", summary, "summary.md")
-                        st.write(summary)
+                        st.text_area("📜 Summary", summary, height=400)
+                        st.download_button("⬇️ Download Summary", summary, "summary.md")
                 else:
                     status_placeholder.error("Server error.")
             except Exception as e:
@@ -135,4 +134,3 @@ if st.button("Summarize PDF"):
 
 
 st.markdown("---")
-

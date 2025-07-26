@@ -1,8 +1,6 @@
 {
     "metadata": {
         "input_document": [
-            "",
-            "",
             ""
         ],
         "persona": {
@@ -20,31 +18,9 @@
             "section_title": "",
             "importance_rank": "",
             "page_number": ""
-        },
-        {
-            "document": "",
-            "section_title": "",
-            "importance_rank": "",
-            "page_number": ""
-        },
-        {
-            "document": "",
-            "section_title": "",
-            "importance_rank": "",
-            "page_number": ""
         }
     ],
     "subsection_analysis": [
-        {
-            "document": "",
-            "refined_text": "",
-            "page_number": ""
-        },
-        {
-            "document": "",
-            "refined_text": "",
-            "page_number": ""
-        },
         {
             "document": "",
             "refined_text": "",

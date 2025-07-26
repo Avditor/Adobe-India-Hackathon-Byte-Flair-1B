@@ -6,22 +6,22 @@
     },
     "documents": [
         {
-            "filename": "",
-            "title": ""
+            "filename": "South of France - Cities.pdf",
+            "title": "South of France - Cities"
         },
         {
-            "filename": "",
-            "title": ""
+            "filename": "South of France - Cuisine.pdf",
+            "title": "South of France - Cuisine"
         },
         {
-            "filename": "",
-            "title": ""
+            "filename": "South of France - History.pdf",
+            "title": "South of France - History"
         }
     ],
     "persona": {
-        "role": ""
+        "role": "Travel Planner"
     },
     "job_to_be_done": {
-        "task": ""
+        "task": "Plan a trip of 4 days for a group of 10 college friends."
     }
 }
