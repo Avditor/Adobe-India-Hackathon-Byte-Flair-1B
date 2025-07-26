@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI
 app = FastAPI()
 
-
 class URLRequest(BaseModel):
     url: str
 
@@ -54,29 +53,6 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
         with NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_bytes)
             tmp_path = tmp.name
-        # Extract text from the saved PDF
-        # text = extract_text_from_pdf(tmp_path)
-        # Summarize the extracted text, passing input_context
-        # summary = await summarize_text_parallel(text, input_context)
-        
-        # Automatically trigger generate_output after summary is complete
-        # Call /generate_output/ endpoint after summary is complete
-        # try:
-        #     import httpx
-        #     async with httpx.AsyncClient() as client:
-        #         response = await client.post("http://localhost:8000/generate_output/")
-        #         try:
-        #             response.raise_for_status()
-        #         except httpx.HTTPStatusError as e:
-        #             logger.error(f"/generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
-        #             raise
-        #         if response.status_code == 200:
-        #             logger.info("output.json successfully updated after summarization.")
-        #             json = response.json().json
-        #         else:
-        #             logger.warning(f"Failed to update output.json: {response.status_code} - {response.text}")
-        # except Exception as e:
-        #     logger.error(f"Error while calling /generate_output/: {str(e)}")
         response = await generate_structured_output()
         logger.info(response)
         return {"summary": json.dumps(response.get("json",{}))}
@@ -237,7 +213,7 @@ async def summarize_text_parallel(text, input_context=None):
     - **Task:** {task}
     - **Challenge Description:** {challenge}
 
-    Use ONLY relevant document content to solve this challenge. STOP starting with okay here's the summary, or anything similar, JUST focus on outputting.
+    Use ONLY relevant document content to solve this challenge. Never start with okay here's the summary, or anything similar, JUST focus on outputting.
     Provide a clear, actionable summary in 150 words.
     DO NOT repeat these instructions or mention you're an AI.
     Ignore chunks with errors.
