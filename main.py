@@ -55,28 +55,31 @@ async def summarize_local(file: UploadFile = File(...), input_json: Optional[Upl
             tmp.write(file_bytes)
             tmp_path = tmp.name
         # Extract text from the saved PDF
-        text = extract_text_from_pdf(tmp_path)
+        # text = extract_text_from_pdf(tmp_path)
         # Summarize the extracted text, passing input_context
-        summary = await summarize_text_parallel(text, input_context)
+        # summary = await summarize_text_parallel(text, input_context)
         
         # Automatically trigger generate_output after summary is complete
         # Call /generate_output/ endpoint after summary is complete
-        try:
-            import httpx
-            async with httpx.AsyncClient() as client:
-                response = await client.post("http://localhost:8000/generate_output/")
-                try:
-                    response.raise_for_status()
-                except httpx.HTTPStatusError as e:
-                    logger.error(f"/generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
-                    raise
-                if response.status_code == 200:
-                    logger.info("output.json successfully updated after summarization.")
-                else:
-                    logger.warning(f"Failed to update output.json: {response.status_code} - {response.text}")
-        except Exception as e:
-            logger.error(f"Error while calling /generate_output/: {str(e)}")
-        return {"summary": summary}
+        # try:
+        #     import httpx
+        #     async with httpx.AsyncClient() as client:
+        #         response = await client.post("http://localhost:8000/generate_output/")
+        #         try:
+        #             response.raise_for_status()
+        #         except httpx.HTTPStatusError as e:
+        #             logger.error(f"/generate_output/ failed with status: {e.response.status_code}, response: {e.response.text}")
+        #             raise
+        #         if response.status_code == 200:
+        #             logger.info("output.json successfully updated after summarization.")
+        #             json = response.json().json
+        #         else:
+        #             logger.warning(f"Failed to update output.json: {response.status_code} - {response.text}")
+        # except Exception as e:
+        #     logger.error(f"Error while calling /generate_output/: {str(e)}")
+        response = await generate_structured_output()
+        logger.info(response)
+        return {"summary": json.dumps(response.json)}
     
     except Exception as e:
         logger.error(f"Error in summarize_local endpoint: {str(e)}")
@@ -387,6 +390,7 @@ async def generate_structured_output():
 
         for doc in documents:
             filename = doc.get("filename", "") if isinstance(doc, dict) else ""
+            print("running for",filename)
             title = doc.get("title", "") if isinstance(doc, dict) else ""
             pdf_path = os.path.join(os.path.dirname(__file__), "Collections", "PDFs", filename)
 
@@ -472,7 +476,7 @@ async def generate_structured_output():
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(output_data, f, indent=4)
 
-        return {"status": "success", "message": "output.json updated!"}
+        return {"status": "success","json":output_data, "message": "output.json updated!"}
 
     except Exception as e:
         logger.error(f"Error generating structured output: {str(e)}")
