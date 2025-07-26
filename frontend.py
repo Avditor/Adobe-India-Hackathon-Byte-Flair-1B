@@ -7,55 +7,72 @@ import streamlit as st
 st.set_page_config(page_title="Persona-Driven Document Intelligence", layout="wide")
 
 st.markdown("""
-    <style>
-        body {
-            background-color: #282c34; /* Darker background */
-            color: #abb2bf; /* Lighter, less harsh text */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
-        }
-        .stTextInput>div>div>input {
-            font-size: 16px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #61afef; /* Softer blue */
-            background-color: #3e4451; /* Darker input background */
-            color: #d1d5db; /* Light gray input text */
-        }
-        .stButton>button {
-            background-color: #61afef; /* Softer blue button */
-            color: #ffffff;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 12px 28px;
-            border-radius: 8px;
-            transition: all 0.3s;
-        }
-        .stButton>button:hover {
-            background-color: #569cd6; /* Slightly darker on hover */
-            transform: translateY(-2px);
-        }
-        .stMarkdown, .stSubheader {
-            color: #e06c75; /* Soft red for headers */
-            font-weight: bold;
-        }
-        .summary-section {
-            background-color: #3e4451;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            border-left: 5px solid #61afef;
-        }
-        .section-title {
-            color: #61afef;
-            font-size: 24px;
-            margin-bottom: 15px;
-        }
-        .section-content {
-            color: #d1d5db;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-    </style>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(to right, #1e0502, #721704, #2d0b04);
+        color: #e5e7eb;
+    }
+
+    .stTextInput>div>div>input,
+    .stFileUploader>div>div>div>input {
+        background-color: #2a2b2b;
+        color: #e5e7eb;
+        border: 1px solid #b30c01;
+        border-radius: 0.5rem;
+        padding: 10px;
+    }
+
+    .stButton>button {
+        background-color: #b30c01;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 0.5rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .stButton>button:hover {
+        background-color: #8c0a00;
+    }
+
+    .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 {
+        color: #c4c4c4;
+    }
+
+    .stDownloadButton>button {
+        background-color: #eb1100;
+        color: white;
+        border-radius: 0.375rem;
+        padding: 0.5rem 1rem;
+        font-weight: 500;
+    }
+
+    .stDownloadButton>button:hover {
+        background-color: #bf1002;
+    }
+
+    .summary-section {
+        background-color: #1b1b1b;
+        padding: 20px;
+        border-radius: 0.75rem;
+        margin-bottom: 20px;
+        border-left: 5px solid #b30c01;
+    }
+
+    .section-title {
+        color: #c2c2c2;
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+
+    .section-content {
+        color: #ffffff;
+        font-size: 16px;
+        line-height: 1.6;
+    }
+</style>
 """, unsafe_allow_html=True)
 
 st.title("Persona-Driven Document Intelligence")
@@ -99,10 +116,10 @@ if uploaded_file is not None:
         st.warning(f"⚠️ File `{base_filename}` already exists in Collections. Skipping save.")
 
 
-if st.button("Summarize PDF"):
+if st.button("Analyze PDF"):
     if uploaded_file and input_json_file:
         with st.spinner("Processing..."):
-            status_placeholder.info("Uploading and summarizing the document...")
+            status_placeholder.info("Uploading and analyzing the document...")
 
             try:
                 # Send the PDF and input.json as separate file fields
