@@ -9,7 +9,7 @@ In Round 1B, we developed a persona-driven document intelligence system that ext
 
 We leveraged **Gemma 3:1b**, an efficient open-source LLM that runs entirely **offline**, complies with the **<1GB size constraint**, and requires **CPU-only execution**. It processes 3–5 documents in approximately **4 minutes**, which slightly exceeds ideal expectations, we kindly ask you to bear with the additional processing time in favor of accuracy and model richness.
 
-The system produces a structured output JSON containing metadata, ranked sections, and refined sub-section text, ensuring alignment with the competition’s goals of semantic relevance and explainability. All documents in `/app/input` are processed and output to `/app/output`, with no web calls, making it secure, reproducible, and compatible with the evaluation environment.
+The system produces a structured output JSON containing metadata, ranked sections, and refined sub-section text, ensuring alignment with the competition’s goals of semantic relevance and explainability. All documents in `Collections/input.json` are processed and output to `Collections/output.json`, with no web calls, making it secure, reproducible, and compatible with the evaluation environment. The output after processing is produced in a relevant JSON format printed on the Front-end.
 
 
 _____________________________________________________________________________________________________________________________________________________________________________________________________________________
