@@ -77,5 +77,5 @@ docker build -t ollama-app .
 docker run -p 8000:8000 -p 8501:8501 ollama-app
 ```
 
-<img width="1536" height="1024" alt="Gemma 3_1B Robot Illustration" src="https://github.com/user-attachments/assets/e1ef7322-379f-4829-babf-af97cd0494ac" />
+<img width="400" height="600" alt="Gemma 3_1B Robot Illustration" src="https://github.com/user-attachments/assets/e1ef7322-379f-4829-babf-af97cd0494ac" />
 
