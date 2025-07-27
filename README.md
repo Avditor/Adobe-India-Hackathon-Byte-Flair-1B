@@ -23,10 +23,6 @@ Installation & Setup
 git clone https://github.com/your-username/Adobe-India-Hackathon-Byte-Flair-1B.git
 ````
 
-```
-cd Adobe-India-Hackathon-Byte-Flair-1B
-```
-
 
 
 2. Install Dependencies
