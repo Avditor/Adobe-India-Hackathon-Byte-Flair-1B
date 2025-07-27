@@ -3,9 +3,10 @@ Adobe India Hackathon - Byte Flair (Round 1B)
 
 An offline LLM-powered system for persona-driven document intelligence.
 
-🔧 Installation & Setup
 
-1️⃣ Clone the Repository
+Installation & Setup
+
+1. Clone the Repository
 
 ```
 git clone https://github.com/your-username/Adobe-India-Hackathon-Byte-Flair-1B.git
@@ -15,13 +16,13 @@ git clone https://github.com/your-username/Adobe-India-Hackathon-Byte-Flair-1B.g
 cd Adobe-India-Hackathon-Byte-Flair-1B
 ```
 
-2️⃣ Install Dependencies
+2. Install Dependencies
 
 ```
 pip install -r requirements.txt
 ```
 
-3️⃣ Install Ollama & Gemma 3 LLM
+3️. Install Ollama & Gemma 3 LLM
 
 ▪️ Install Ollama (MacOS/Linux)
 
@@ -34,20 +35,20 @@ If not supporting your OS, install Ollama from the website - https://ollama.com/
 
 
 
-▪️ Download Gemma 3 Model
+Download Gemma 3 Model
 
 ```
 ollama pull gemma3:1b
 ```
 
-4️⃣ Start the Backend (FastAPI)
+4️. Start the Backend (FastAPI)
 
 ```
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 
-5️⃣ Start the Frontend (Streamlit)
+5️. Start the Frontend (Streamlit)
 
 ```
 streamlit run frontend.py
