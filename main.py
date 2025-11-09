@@ -5,6 +5,8 @@ import fitz
 import asyncio
 import json
 import httpx
+import time
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from fastapi import FastAPI
 from pydantic import BaseModel
@@ -34,55 +36,47 @@ from fastapi import File, UploadFile, Form
 from tempfile import NamedTemporaryFile
 
 @app.post("/summarize_local/")
-async def summarize_local(file: UploadFile = File(...), input_json: Optional[UploadFile] = File(None)):
+async def summarize_local(file: UploadFile = File(...), 
+                          persona:str = Form(...),
+                          word_limit:int =Form(...)):
     try:
         logger.info(f"Received PDF file: {file.filename}")
         input_context = {}
-        if input_json:
-            logger.info(f"Received JSON file: {input_json.filename}")
-            await save_uploaded_json(input_json)
-            try:
-                json_bytes = await input_json.read()
-                input_context = json.loads(json_bytes.decode("utf-8"))
-            except Exception as e:
-                logger.warning(f"Could not parse input_json: {str(e)}")
-                input_context = {}
         # Save uploaded PDF file bytes
         file_bytes = await file.read()
         # Save to temp file for processing
         with NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(file_bytes)
             tmp_path = tmp.name
-        response = await generate_structured_output()
-        logger.info(response)
-        return {"summary": json.dumps(response.get("json",{}))}
+        # Extract text from the saved PDF
+        text = extract_text_from_pdf(tmp_path)
+        # Summarize the extracted text, passing input_context
+        summary = await summarize_text_parallel(text, input_context,persona,word_limit)
+        
+        # Automatically trigger generate_output after summary is complete
+        # Call /generate_output/ endpoint after summary is complete
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.post("http://localhost:8000/generate_output/")
+                if response.status_code == 200:
+                    logger.info("✅ output.json successfully updated after summarization.")
+                else:
+                    logger.warning(f"⚠️ Failed to update output.json: {response.status_code} - {response.text}")
+        except Exception as e:
+            logger.error(f"❌ Error while calling /generate_output/: {str(e)}")
+        return {"summary": summary}
     
     except Exception as e:
         logger.error(f"Error in summarize_local endpoint: {str(e)}")
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-async def save_uploaded_json(input_json):
-    if input_json:
-        json_bytes = await input_json.read()
-
-        # Always use Collections/input.json as save path
-        collections_dir_json = os.path.join(os.path.dirname(__file__), "Collections")
-        os.makedirs(collections_dir_json, exist_ok=True)
-
-        json_save_path = os.path.join(collections_dir_json, "input.json")  # <-- hardcoded filename
-
-        with open(json_save_path, "wb") as f:
-            f.write(json_bytes)
-
-        logging.info(f"JSON saved to: {json_save_path}")
+    
 def extract_text_from_pdf(pdf_path):
     text = ""
     with fitz.open(pdf_path) as doc:
         for page in doc:
             text += page.get_text()
     return text
-
-
 
 async def summarize_chunk_with_retry(chunk, chunk_id, total_chunks, max_retries=2):
     """Retry mechanism wrapper for summarize_chunk_wrapper."""
@@ -129,7 +123,7 @@ async def summarize_chunk_with_retry(chunk, chunk_id, total_chunks, max_retries=
     return f"Error: Unexpected end of retry loop for chunk {chunk_id}"
 
 
-async def summarize_text_parallel(text, input_context=None):
+async def summarize_text_parallel(text,input_context=None,persona="user",word_limit=150):
     """Process text in chunks optimized for Gemma 3's 128K context window with full parallelism and retry logic."""
     token_estimate = len(text) // 4
     logger.info(f"Token Estimate: {token_estimate}")
@@ -139,14 +133,15 @@ async def summarize_text_parallel(text, input_context=None):
     chunk_overlap = 100   # Larger overlap to maintain context
     
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-        separators=["\n\n", "\n", ". ", " ", ""]
-    )
+    chunk_size=chunk_size,
+    chunk_overlap=chunk_overlap,
+    separators=["\n\n", "\n", ". ", " ", ""]
+      )
     chunks = splitter.split_text(text)
+
     logger.info("---------------------------------------------------------")
     logger.info(f"Split text into {len(chunks)} chunks")
-    logger.info("---------------------------------------------------------")
+
     
     # Log chunk details
     for i, chunk in enumerate(chunks, 1):
@@ -195,34 +190,42 @@ async def summarize_text_parallel(text, input_context=None):
     logger.info("Generating final summary...")
 
     # Create final summary with system message
-    persona = input_context.get("persona", {}).get("role", "a general user")
+      # You can now access persona and word_limit here
+    # persona = logger.info(f"Persona: {persona}")
+    # word_limit = logger.info(f"Word limit: {word_limit}")
     task = input_context.get("job_to_be_done", {}).get("task", "analyze the document for insights")
     challenge = input_context.get("challenge_info", {}).get("description", "")
-
+       # You can now access persona and word_limit here
+    
     final_messages = [
-        {
-            "role": "system",
-            "content": f"You are a document intelligence assistant helping {persona}s complete tasks."
-        },
-        {
-            "role": "user",
-            "content": f"""
-    Generate a technical analysis and summary based on the user's context:
+    {
+        "role": "system",
+        "content": (
+            f"You are a document intelligence assistant helping {persona}s complete tasks. "
+            "You respond clearly, concisely, and professionally."
+        )
+    },
+    {
+        "role": "user",
+        "content": f"""
+Generate a technical analysis and summary tailored for a {persona} based on the user's context:
 
-    - **Persona:** {persona}
-    - **Task:** {task}
-    - **Challenge Description:** {challenge}
+- Persona: {persona}
+- Task: {task}
+- Challenge Description: {challenge}
 
-    Use ONLY relevant document content to solve this challenge. Never start with okay here's the summary, or anything similar, JUST focus on outputting.
-    Provide a clear, actionable summary in 150 words.
-    DO NOT repeat these instructions or mention you're an AI.
-    Ignore chunks with errors.
+Use ONLY relevant document content to solve this challenge.
+DO NOT start your response with any greetings, introductions, or words like "Okay", "Sure", or "Here is".
+Begin immediately with the requested summary.
+Provide a clear, actionable summary in exactly {word_limit} words.
+DO NOT repeat these instructions or mention you are an AI.
+Ignore chunks that have errors.
 
-    Here’s the content to analyze:
-    {combined_chunk_summaries}
-    """
-        }
-    ]
+Here’s the content to analyze:
+{combined_chunk_summaries}
+"""
+    }
+]
 
 
     # Use async http client for the final summary with retry logic

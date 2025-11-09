@@ -15,7 +15,9 @@ st.markdown("""
         background: linear-gradient(to right, #1e0502, #721704, #2d0b04);
         color: #e5e7eb;
     }
-
+.stSlider > div[data-baseweb="slider"] {
+    width: 300px !important;
+}
     .stTextInput>div>div>input,
     .stFileUploader>div>div>div>input {
         background-color: #2a2b2b;
@@ -77,9 +79,6 @@ st.markdown("""
 
 st.title("Persona-Driven Document Intelligence")
 st.markdown("Connecting What Matters - For The User Who Matters")
-
-status_placeholder = st.empty()
-
 def format_section(title, content):
     """Format a section of the summary with consistent styling"""
     return f"""
@@ -89,15 +88,13 @@ def format_section(title, content):
     </div>
     """
 
-
-
-
 uploaded_file = st.file_uploader("Upload a local PDF", type="pdf", key="pdf_uploader")
 
-
-# Input JSON uploader
-input_json_file = st.file_uploader("Upload input.json (challenge/task description)", type=["json"], key="input_json_uploader")
-
+persona =  st.radio("choose one option ",
+         ["student","teacher","researcher","user"],
+         index=None,)
+word_limit = st.slider("pick the word limit ",150,300)
+status_placeholder = st.empty()
 if uploaded_file is not None:
     collections_dir = os.path.join(os.path.dirname(__file__), "Collections","PDFs")
     os.makedirs(collections_dir, exist_ok=True)
@@ -117,7 +114,7 @@ if uploaded_file is not None:
 
 
 if st.button("Analyze PDF"):
-    if uploaded_file and input_json_file:
+    if uploaded_file :
         with st.spinner("Processing..."):
             status_placeholder.info("Uploading and analyzing the document...")
 
@@ -125,14 +122,17 @@ if st.button("Analyze PDF"):
                 # Send the PDF and input.json as separate file fields
                 files = {
                     "file": (uploaded_file.name, uploaded_file.getvalue(), "application/pdf"),
-                    "input_json": (input_json_file.name, input_json_file.getvalue(), "application/json")
+                }
+                data = {
+                    "persona":persona,
+                    "word_limit":word_limit,
                 }
                 response = requests.post(
                     "http://localhost:8000/summarize_local/",
                     files=files,
+                    data=data,
                     timeout=3600
                 )
-
                 if response.status_code == 200:
                     data = response.json()
                     if "error" in data:
